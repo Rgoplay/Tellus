@@ -965,7 +965,7 @@ public final class EarthChunkGenerator extends ChunkGenerator {
          long solidSectionsSubPhaseStartNs = beginFullChunkProfiling();
          int solidMaxIndex = resolveSolidSectionMaxIndex(chunk, chunkMinY, minSurface, sectionCount);
          solidSectionProfiler.maxIndexNs += elapsedFullChunkProfilingSince(solidSectionsSubPhaseStartNs);
-         if (solidMaxIndex >= 0) {
+         if (solidMaxIndex >= 0 && this.settings.generateStone()) {
             if (sectionWriter != null) {
                fillSolidSections(sectionWriter, solidSections, sectionTopYs, solidMaxIndex, STONE_STATE, DEEPSLATE_STATE, deepslateStart, solidSectionProfiler);
             } else {
@@ -984,7 +984,8 @@ public final class EarthChunkGenerator extends ChunkGenerator {
                int waterSurface = waterSurfaces[index];
                boolean hasWater = waterFlags[index];
                Holder<Biome> biome = biomeCache[index];
-               int y = chunkMinY;
+               int stoneDepth = 8; // thin layer of stone
+               int y = this.settings.generateStone() ? chunkMinY : Math.max(chunkMinY, surface - stoneDepth);
                long subPhaseStartNs = beginFullChunkProfiling();
                int surfaceCoverClass = surfaceCoverClasses[index];
                boolean underwater = hasWater && waterSurface > surface;
@@ -995,10 +996,11 @@ public final class EarthChunkGenerator extends ChunkGenerator {
                   : this.resolveMountainMassFillBlock(surfaceCoverClass, surface, slopeDiff, convexity, worldZ);
 
                if (mountainMassFill != null) {
+                  int fillStart = this.settings.generateStone() ? chunkMinY : Math.max(chunkMinY, surface - stoneDepth);
                   if (sectionWriter != null) {
-                     sectionWriter.fillColumnConstant(localX, localZ, chunkMinY, surface, mountainMassFill);
+                     sectionWriter.fillColumnConstant(localX, localZ, fillStart, surface, mountainMassFill);
                   } else {
-                     fillColumnConstant(sections, columnFilledSections, chunkMinY, localX, localZ, chunkMinY, surface, mountainMassFill);
+                     fillColumnConstant(sections, columnFilledSections, chunkMinY, localX, localZ, fillStart, surface, mountainMassFill);
                   }
                } else {
                   while (y <= surface) {

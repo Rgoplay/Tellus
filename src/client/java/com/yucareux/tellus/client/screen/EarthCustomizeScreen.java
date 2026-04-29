@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -415,6 +416,7 @@ public class EarthCustomizeScreen extends Screen {
       boolean caveGeneration = this.findToggleValue("cave_generation", EarthGeneratorSettings.DEFAULT.caveGeneration());
       boolean oreDistribution = this.findToggleValue("ore_distribution", EarthGeneratorSettings.DEFAULT.oreDistribution());
       boolean lavaPools = this.findToggleValue("lava_pools", EarthGeneratorSettings.DEFAULT.lavaPools());
+      boolean generateStone = this.findToggleValue("generate_stone", EarthGeneratorSettings.DEFAULT.generateStone());
       boolean enableRoads = this.findToggleValue("enable_roads", EarthGeneratorSettings.DEFAULT.enableRoads());
       boolean enableBuildings = this.findToggleValue("enable_buildings", EarthGeneratorSettings.DEFAULT.enableBuildings());
       boolean enableWater = this.findToggleValue("enable_water", EarthGeneratorSettings.DEFAULT.enableWater());
@@ -516,7 +518,8 @@ public class EarthCustomizeScreen extends Screen {
          demSelection,
          enableRoads,
          enableBuildings,
-         enableWater
+         enableWater,
+         generateStone
       );
    }
 
@@ -561,6 +564,7 @@ public class EarthCustomizeScreen extends Screen {
       this.setToggleValue("cave_generation", initialSettings.caveGeneration());
       this.setToggleValue("ore_distribution", initialSettings.oreDistribution());
       this.setToggleValue("lava_pools", initialSettings.lavaPools());
+      this.setToggleValue("generate_stone", initialSettings.generateStone());
       this.setToggleValue("enable_roads", initialSettings.enableRoads());
       this.setToggleValue("enable_buildings", initialSettings.enableBuildings());
       this.setToggleValue("enable_water", initialSettings.enableWater());
@@ -825,6 +829,7 @@ public class EarthCustomizeScreen extends Screen {
          new EarthCustomizeScreen.CategoryDefinition(
             "geological",
             List.of(
+               toggle("generate_stone", EarthGeneratorSettings.DEFAULT.generateStone()),
                toggle("cave_generation", EarthGeneratorSettings.DEFAULT.caveGeneration()),
                toggle("ore_distribution", EarthGeneratorSettings.DEFAULT.oreDistribution()),
                toggle("lava_pools", EarthGeneratorSettings.DEFAULT.lavaPools())
@@ -1484,7 +1489,7 @@ public class EarthCustomizeScreen extends Screen {
       }
 
       Runnable onChange = this::onSettingsChanged;
-      if ("distant_horizons".equals(category.getId()) || "voxy".equals(category.getId()) || "dem_providers".equals(category.getId())) {
+      if ("distant_horizons".equals(category.getId()) || "voxy".equals(category.getId()) || "dem_providers".equals(category.getId()) || "geological".equals(category.getId())) {
          onChange = () -> {
             this.onSettingsChanged();
             this.showCategory(category);
@@ -1676,6 +1681,27 @@ public class EarthCustomizeScreen extends Screen {
             }
          }
       }
+
+      boolean stoneGenerationEnabled = isUndergroundStoneGenerationEnabled();
+
+      Component noUndergroundTooltip = Component.translatable("property.tellus.no_underground.tooltip").withStyle(ChatFormatting.GRAY);
+
+      Set<String> undergroundKeys = Set.of(
+         "cave_generation", "ore_distribution", "lava_pools",
+         "add_mineshafts", "add_strongholds", "add_ancient_cities",
+         "add_trial_chambers", "deep_dark", "geodes"
+      );
+
+      for (EarthCustomizeScreen.CategoryDefinition cat : this.categories) {
+         for (EarthCustomizeScreen.SettingDefinition setting : cat.getSettings()) {
+            if (setting instanceof EarthCustomizeScreen.ToggleDefinition toggle && undergroundKeys.contains(toggle.key)) {
+               toggle.forceDisabled(!stoneGenerationEnabled, noUndergroundTooltip);
+               if (!stoneGenerationEnabled) {
+                  toggle.value = false;
+               }
+            }
+         }
+      }
    }
 
    private boolean roadsAndBuildingsSupportedForSelectedScale() {
@@ -1684,6 +1710,10 @@ public class EarthCustomizeScreen extends Screen {
 
    private static boolean roadsAndBuildingsSupportedForWorldScale(double worldScale) {
       return worldScale > 0.0 && worldScale <= OSM_ROADS_AND_BUILDINGS_MAX_WORLD_SCALE;
+   }
+
+   private boolean isUndergroundStoneGenerationEnabled() {
+      return this.findToggleValue("generate_stone", EarthGeneratorSettings.DEFAULT.generateStone());
    }
 
    private static boolean isPreviewHiddenCategory(String id) {

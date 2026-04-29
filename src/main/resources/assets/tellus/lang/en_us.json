@@ -206,10 +206,13 @@
   "property.tellus.enable_roads.name": "Enable Roads",
   "property.tellus.enable_buildings.name": "Enable Buildings",
   "property.tellus.enable_water.name": "Enable Water",
+  "property.tellus.generate_stone.name": "Enable underground generation",
   "property.tellus.enable_roads.tooltip": "Generate OpenStreetMap road features where data is available",
   "property.tellus.enable_buildings.tooltip": "Generate Overture building footprints and 3D parts where data is available",
   "property.tellus.enable_water.tooltip": "Use Overture/OSM water when enabled. Leave off to keep ESA water",
+  "property.tellus.generate_stone.tooltip": "To improve performance you can disable generation of underground blocks",
   "tellus.openstreetmaps_features.scale_limit_warning": "Roads and buildings are disabled because they are only available when World Scale is 1:15 (15 m/block) or finer.",
   "property.tellus.enable_roads.scale_limit.tooltip": "Disabled because roads are only available when World Scale is 1:15 (15 m/block) or finer.",
-  "property.tellus.enable_buildings.scale_limit.tooltip": "Disabled because buildings are only available when World Scale is 1:15 (15 m/block) or finer."
+  "property.tellus.enable_buildings.scale_limit.tooltip": "Disabled because buildings are only available when World Scale is 1:15 (15 m/block) or finer.",
+  "property.tellus.no_underground.tooltip": "Disabled because underground generation is disabled"
 }

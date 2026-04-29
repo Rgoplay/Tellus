@@ -211,5 +211,7 @@
   "property.tellus.enable_water.tooltip": "Usa agua de Overture/OSM cuando está activado. Déjalo desactivado para mantener el agua ESA",
   "tellus.openstreetmaps_features.scale_limit_warning": "Las carreteras y los edificios están desactivados porque solo están disponibles cuando la escala del mundo es 1:15 (15 m/bloque) o más detallada.",
   "property.tellus.enable_roads.scale_limit.tooltip": "Desactivado porque las carreteras solo están disponibles cuando la escala del mundo es 1:15 (15 m/bloque) o más detallada.",
-  "property.tellus.enable_buildings.scale_limit.tooltip": "Desactivado porque los edificios solo están disponibles cuando la escala del mundo es 1:15 (15 m/bloque) o más detallada."
+  "property.tellus.enable_buildings.scale_limit.tooltip": "Desactivado porque los edificios solo están disponibles cuando la escala del mundo es 1:15 (15 m/bloque) o más detallada.",
+  "property.tellus.generate_stone.name": "Activar generación subterránea",
+  "property.tellus.no_underground.tooltip": "Desactivado porque la generación subterránea está desactivada"
 }

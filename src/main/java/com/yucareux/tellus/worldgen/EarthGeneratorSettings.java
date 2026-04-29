@@ -66,7 +66,8 @@ public record EarthGeneratorSettings(
    EarthGeneratorSettings.DemSelection demSelection,
    boolean enableRoads,
    boolean enableBuildings,
-   boolean enableWater
+   boolean enableWater,
+   boolean generateStone
 ) {
    public static final double DEFAULT_SPAWN_LATITUDE = 27.9881;
    public static final double DEFAULT_SPAWN_LONGITUDE = 86.925;
@@ -137,7 +138,8 @@ public record EarthGeneratorSettings(
       EarthGeneratorSettings.DemSelection.automaticSelection(),
       false,
       false,
-      false
+      false,
+      true
    );
    private static final MapCodec<EarthGeneratorSettings.BaseToggles> BASE_TOGGLES_CODEC = RecordCodecBuilder.mapCodec(
       instance -> instance.group(
@@ -279,6 +281,7 @@ public record EarthGeneratorSettings(
    private static final MapCodec<Boolean> ENABLE_ROADS_CODEC = Codec.BOOL.fieldOf("enable_roads").orElse(DEFAULT.enableRoads());
    private static final MapCodec<Boolean> ENABLE_BUILDINGS_CODEC = Codec.BOOL.fieldOf("enable_buildings").orElse(DEFAULT.enableBuildings());
    private static final MapCodec<Boolean> ENABLE_WATER_CODEC = Codec.BOOL.fieldOf("enable_water").orElse(DEFAULT.enableWater());
+   private static final MapCodec<Boolean> GENERATE_STONE_CODEC = Codec.BOOL.fieldOf("generate_stone").orElse(DEFAULT.generateStone());
    private static final MapCodec<Boolean> VOXY_CHUNK_PREGEN_ENABLED_CODEC = Codec.BOOL
       .fieldOf("voxy_chunk_pregen_enabled")
       .orElse(DEFAULT.voxyChunkPregenEnabled());
@@ -343,6 +346,7 @@ public record EarthGeneratorSettings(
             builder = EarthGeneratorSettings.ENABLE_ROADS_CODEC.encode(input.enableRoads(), ops, builder);
             builder = EarthGeneratorSettings.ENABLE_BUILDINGS_CODEC.encode(input.enableBuildings(), ops, builder);
             builder = EarthGeneratorSettings.ENABLE_WATER_CODEC.encode(input.enableWater(), ops, builder);
+            builder = EarthGeneratorSettings.GENERATE_STONE_CODEC.encode(input.generateStone(), ops, builder);
             builder = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_ENABLED_CODEC.encode(input.voxyChunkPregenEnabled(), ops, builder);
             builder = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_MAX_RADIUS_CODEC.encode(input.voxyChunkPregenMaxRadius(), ops, builder);
             builder = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_CHUNKS_PER_TICK_CODEC.encode(input.voxyChunkPregenChunksPerTick(), ops, builder);
@@ -367,6 +371,7 @@ public record EarthGeneratorSettings(
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.ENABLE_ROADS_CODEC.keys(ops));
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.ENABLE_BUILDINGS_CODEC.keys(ops));
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.ENABLE_WATER_CODEC.keys(ops));
+            baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.GENERATE_STONE_CODEC.keys(ops));
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.VOXY_CHUNK_PREGEN_ENABLED_CODEC.keys(ops));
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.VOXY_CHUNK_PREGEN_MAX_RADIUS_CODEC.keys(ops));
             baseKeys = Stream.concat(baseKeys, EarthGeneratorSettings.VOXY_CHUNK_PREGEN_CHUNKS_PER_TICK_CODEC.keys(ops));
@@ -394,6 +399,7 @@ public record EarthGeneratorSettings(
             DataResult<Boolean> enableRoads = EarthGeneratorSettings.ENABLE_ROADS_CODEC.decode(ops, input);
             DataResult<Boolean> enableBuildings = EarthGeneratorSettings.ENABLE_BUILDINGS_CODEC.decode(ops, input);
             DataResult<Boolean> enableWater = EarthGeneratorSettings.ENABLE_WATER_CODEC.decode(ops, input);
+            DataResult<Boolean> generateStone = EarthGeneratorSettings.GENERATE_STONE_CODEC.decode(ops, input);
             DataResult<Boolean> voxyChunkPregenEnabled = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_ENABLED_CODEC.decode(ops, input);
             DataResult<Integer> voxyChunkPregenMaxRadius = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_MAX_RADIUS_CODEC.decode(ops, input);
             DataResult<Integer> voxyChunkPregenChunksPerTick = EarthGeneratorSettings.VOXY_CHUNK_PREGEN_CHUNKS_PER_TICK_CODEC.decode(ops, input);
@@ -435,6 +441,7 @@ public record EarthGeneratorSettings(
             settings = settings.apply2(EarthGeneratorSettings::applyEnableRoads, enableRoads);
             settings = settings.apply2(EarthGeneratorSettings::applyEnableBuildings, enableBuildings);
             settings = settings.apply2(EarthGeneratorSettings::applyEnableWater, enableWater);
+            settings = settings.apply2(EarthGeneratorSettings::applyGenerateStone, generateStone);
             settings = settings.apply2(EarthGeneratorSettings::applyDeepDark, deepDark);
             settings = settings.apply2(EarthGeneratorSettings::applyGeodes, geodes);
             settings = settings.apply2(EarthGeneratorSettings::withStructureSettings, structures);
@@ -518,7 +525,8 @@ public record EarthGeneratorSettings(
       EarthGeneratorSettings.DemSelection demSelection,
       boolean enableRoads,
       boolean enableBuildings,
-      boolean enableWater
+      boolean enableWater,
+      boolean generateStone
    ) {
       worldScale = clampWorldScale(worldScale);
       voxyChunkPregenMaxRadius = Mth.clamp(voxyChunkPregenMaxRadius, 0, MAX_VOXY_PREGEN_RADIUS);
@@ -577,6 +585,7 @@ public record EarthGeneratorSettings(
       this.enableRoads = enableRoads;
       this.enableBuildings = enableBuildings;
       this.enableWater = enableWater;
+      this.generateStone =  generateStone;
    }
 
    public boolean isSeaLevelAutomatic() {
@@ -761,6 +770,10 @@ public record EarthGeneratorSettings(
       return settings.withEnableWater(Objects.requireNonNull(enabled, "enableWater"));
    }
 
+   private static EarthGeneratorSettings applyGenerateStone(EarthGeneratorSettings settings, Boolean enabled) {
+      return settings.withGenerateStone(Objects.requireNonNull(enabled, "generateStone"));
+   }
+
    private static EarthGeneratorSettings.SettingsBase applyVoxyChunkPregenEnabled(EarthGeneratorSettings.SettingsBase settings, Boolean enabled) {
       return settings.withVoxyChunkPregenEnabled(Objects.requireNonNull(enabled, "voxyChunkPregenEnabled"));
    }
@@ -824,7 +837,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -891,7 +905,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -946,7 +961,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1001,7 +1017,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1056,7 +1073,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1111,7 +1129,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1166,7 +1185,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1221,7 +1241,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          enableRoads,
          this.enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1276,7 +1297,8 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          enableBuildings,
-         this.enableWater
+         this.enableWater,
+         this.generateStone
       );
    }
 
@@ -1331,7 +1353,64 @@ public record EarthGeneratorSettings(
          this.demSelection,
          this.enableRoads,
          this.enableBuildings,
-         enableWater
+         enableWater,
+         this.generateStone
+      );
+   }
+
+   private EarthGeneratorSettings withGenerateStone(boolean generateStone) {
+      return new EarthGeneratorSettings(
+         this.worldScale,
+         this.terrestrialHeightScale,
+         this.oceanicHeightScale,
+         this.heightOffset,
+         this.seaLevel,
+         this.spawnLatitude,
+         this.spawnLongitude,
+         this.minAltitude,
+         this.maxAltitude,
+         this.riverLakeShorelineBlend,
+         this.oceanShorelineBlend,
+         this.shorelineBlendCliffLimit,
+         this.caveGeneration,
+         this.oreDistribution,
+         this.lavaPools,
+         this.addStrongholds,
+         this.addVillages,
+         this.addMineshafts,
+         this.addOceanMonuments,
+         this.addWoodlandMansions,
+         this.addDesertTemples,
+         this.addJungleTemples,
+         this.addPillagerOutposts,
+         this.addRuinedPortals,
+         this.addShipwrecks,
+         this.addOceanRuins,
+         this.addBuriedTreasure,
+         this.addIgloos,
+         this.addWitchHuts,
+         this.addAncientCities,
+         this.addTrialChambers,
+         this.addTrailRuins,
+         this.deepDark,
+         this.geodes,
+         this.distantHorizonsWaterResolver,
+         this.distantHorizonsOsmFeatures,
+         this.distantHorizonsOsmRoadMaxDetail,
+         this.distantHorizonsOsmBuildingMaxDetail,
+         this.distantHorizonsOsmNonBlockingFetch,
+         this.realtimeTime,
+         this.realtimeWeather,
+         this.historicalSnow,
+         this.voxyChunkPregenEnabled,
+         this.voxyChunkPregenMaxRadius,
+         this.voxyChunkPregenChunksPerTick,
+         this.distantHorizonsRenderMode,
+         this.demSelection,
+         this.enableRoads,
+         this.enableBuildings,
+         this.enableWater,
+         generateStone
       );
    }
 
@@ -2128,7 +2207,8 @@ public record EarthGeneratorSettings(
             this.demSelection,
             EarthGeneratorSettings.DEFAULT.enableRoads(),
             EarthGeneratorSettings.DEFAULT.enableBuildings(),
-            EarthGeneratorSettings.DEFAULT.enableWater()
+            EarthGeneratorSettings.DEFAULT.enableWater(),
+            EarthGeneratorSettings.DEFAULT.generateStone()
          );
       }
    }
