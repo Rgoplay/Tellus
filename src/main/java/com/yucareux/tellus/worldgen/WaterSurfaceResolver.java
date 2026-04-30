@@ -500,6 +500,60 @@ public final class WaterSurfaceResolver {
       boolean hasWater = false;
       double worldScale = this.settings.worldScale();
 
+
+
+
+      // check quickly if there is water nearby
+      boolean hasWaterNearby = false;
+
+      // OSM first
+      if (this.osmWaterEnabled) {
+         int margin = this.regionMargin;
+         hasWaterNearby = this.osmWaterSource.hasWaterInArea(
+               regionMinX - margin, regionMinZ - margin, 
+               regionMinX + REGION_SIZE + margin, regionMinZ + REGION_SIZE + margin, 
+               worldScale, 0, OsmQueryMode.BLOCKING
+         );
+      }
+
+      if (!hasWaterNearby) {
+         // use a stride of 4 as cover is 10m => 10 blocks ?
+         checkLoop:
+         for (int dz = -regionMargin; dz < REGION_SIZE + regionMargin; dz += 4) {
+               for (int dx = -regionMargin; dx < REGION_SIZE + regionMargin; dx += 4) {
+                  int cover = this.landCoverSource.sampleCoverClass(regionMinX + dx, regionMinZ + dz, worldScale);
+                  if (cover == ESA_WATER) {
+                     hasWaterNearby = true;
+                     break checkLoop;
+                  }
+               }
+         }
+      }
+
+
+      if (!hasWaterNearby) {
+         for (int dz = 0; dz < REGION_SIZE; dz++) {
+            int worldZ = regionMinX + dz;
+            int row = (dz + regionMargin) * gridSize;
+
+            for (int dx = 0; dx < REGION_SIZE; dx++) {
+               int worldX = regionMinX + dx;
+               int index = row + (dx + regionMargin);
+               TellusLandMaskSource.LandMaskSample landMaskSample = this.landMaskSource.sampleLandMask(worldX, worldZ, worldScale);
+               int coverClass = this.landCoverSource.sampleCoverClass(worldX, worldZ, worldScale);
+               int surface = this.sampleSurfaceHeight(worldX, worldZ, coverClass, landMaskSample);
+
+               surfaceHeights[index] = surface;
+
+            }
+         }
+         Tellus.LOGGER.info("Region {}:{} -> FAST PATH in {}ms", regionX, regionZ, (System.nanoTime() - startNanos) / 1_000_000);
+
+         return this.buildDryRegionData(regionX, regionZ, regionMinX, regionMinZ, gridMinX, gridMinZ, gridSize, surfaceHeights, startNanos);
+      }
+
+
+
       for (int dz = 0; dz < gridSize; dz++) {
          int worldZ = gridMinZ + dz;
          int row = dz * gridSize;
